@@ -13,6 +13,7 @@ import string
 # string types
 # add modulo back to var types
 # add junk loops for outside of function decs
+# std library
 
 junk_code_macro = "JUNKCODE"
 junk_class_macro = "JUNKCLASS"
@@ -40,7 +41,7 @@ def generateLoop():
     return finished_loop
 
 def junkCodeRequest():
-    type_array = ["string", "bool", "int", "float", "long", "short", "DWORD", "char"]    
+    type_array = ["std::string", "bool", "int", "float", "long", "short", "DWORD", "char"]    
     lines_amount = random.randint(minimum_created_code_lines,maximum_created_code_lines)
 
     random_code = ""    
@@ -60,9 +61,6 @@ def junkCodeRequest():
         if(loop_bool == 1 and ignore_loops == False):
             random_code += generateLoop()
 
-    
-    with open(f"./parsed/testcode.cpp", 'w') as newfile:
-        newfile.write(random_code)
     return random_code
 
 def junkClassRequest():
@@ -123,7 +121,6 @@ def findMacroOccurences(text, macro_type):
         try:
             # finding #define index
             define_index = text.index(f'{macro_type}')
-            print(define_index)
             
             # finding all occorunes of macros
             indices_object = re.finditer(pattern=macro_type, string=text)
@@ -153,7 +150,7 @@ def parseFile(fileName):
     new_string = text
     for macro_index in range(len(class_macro_locations)): 
         if(macro_index != 0):
-            code_macro_locations = findMacroOccurences(new_string, junk_class_macro)
+            class_macro_locations = findMacroOccurences(new_string, junk_class_macro)
 
         new_string_to_insert = junkClassRequest()
         
@@ -188,12 +185,10 @@ def parseFile(fileName):
         newfile.write(new_string)
 
     print(f"{fileName} completed")
-    #print(new_string)
 
 
 print("Parsing files")
 for file in os.listdir("./"):
     if file.endswith(".cpp"):
         parseFile(file)
-        #print(junkCodeRequest())
 print("File parsing finished")
