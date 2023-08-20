@@ -6,6 +6,14 @@ import html
 import random
 import string
 
+# TODO
+# add args for both unicode / multi byte
+# classes 
+# loops variation
+# string types
+# add modulo back to var types
+# add junk loops for outside of function decs
+
 junk_code_macro = "JUNKCODE"
 junk_class_macro = "JUNKCLASS"
 minimum_created_code_lines = 33
@@ -27,7 +35,7 @@ def generateLoop():
     var_value = generateValueForJunkCodeType(var_type)
 
     signs = [">", "<"]
-    finished_loop = f'for({var_type} {incrementor_name} = {var_value}; {signs[random.randint(0,1)]} 0; {incrementor_name}++)\n{{\ncontinue;\n}}\n'
+    finished_loop = f'\nfor({var_type} {incrementor_name} = {var_value};{incrementor_name} {signs[random.randint(0,1)]} 0; {incrementor_name}++)\n{{\ncontinue;\n}}\n'
 
     return finished_loop
 
@@ -42,13 +50,19 @@ def junkCodeRequest():
         var_type = type_array[random.randint(0, (len(type_array)-1))]
         var_value = generateValueForJunkCodeType(var_type)
         
-        completed_var = f'{var_type} {var_name} = {var_value};\n'
+        if(var_value == None or var_name == None or var_type == None):
+            continue
+
+        completed_var = f'\n{var_type} {var_name} = {var_value};'
+
         random_code += completed_var
 
         if(loop_bool == 1 and ignore_loops == False):
             random_code += generateLoop()
 
     
+    with open(f"./parsed/testcode.cpp", 'w') as newfile:
+        newfile.write(random_code)
     return random_code
 
 def junkClassRequest():
@@ -62,51 +76,54 @@ def junkClassRequest():
         text = re.sub("<code><pre>#include <stdio.h>", "", text)
         text = re.sub("#include <iostream>", "", text)
         text = re.sub("#include <string>", "", text)
+        text = re.sub("<br><br><code><pre>", "", text)
+        
 
         return text
     else:
         return ""
 
 def generateValueForJunkCodeType(type):
-    signs = ["+", "-", "/", "%"] 
+    signs = ["+", "-", "/"] 
     selection = random.randint(0, 1)
     if(type == "bool"):
         options = ["true", "false"]
         return options[random.randint(0, 1)]
     elif(type == "int"):              
         if(selection == 1):
-            return randomNumber(random.randint(1, 21474864))
+            return f'{randomNumber(random.randint(1, 21474864))}'
         else:
             return f"{randomNumber(random.randint(1, 21474864))} {signs[random.randint(0, 1)]} {randomNumber(random.randint(1, 21474864))}"
     elif(type == "long"):              
         if(selection == 1):
-            return randomNumber(random.randint(1, 21474864))
+            return f'{randomNumber(random.randint(1, 21474864))}'
         else:
             return f"{randomNumber(random.randint(1, 21474864))} {signs[random.randint(0, 1)]} {randomNumber(random.randint(1, 21474864))}"        
     elif(type == "short"):              
         if(selection == 1):
-            return randomNumber(random.randint(1, 32767))
+            return f'{randomNumber(random.randint(1, 32767))}'            
         else:
             return f"{randomNumber(random.randint(1, 32767))} {signs[random.randint(0, 1)]} {randomNumber(random.randint(1, 32767))}"        
     elif(type == "DWORD"):
         if(selection == 1):
-            return randomNumber(random.randint(1, 8))
+            return f'{randomNumber(random.randint(1, 21474864))}'            
         else:
-            return f"{randomNumber(random.randint(1, 21474864))} {signs[random.randint(0, 1)]} {randomNumber(random.randint(1, 21474864))}" 
+            return f"{randomNumber(random.randint(1, 2147486))} {signs[random.randint(0, 1)]} {randomNumber(random.randint(1, 2147486))}" 
     elif(type == "char"):
-        return f'"{randomString(1)}"'
+        return f'(char)"{randomString(1)}"'
     elif(type == "float"):
         if(selection == 1):
             return random.random()
         else:
-            return f"{random.random()} {signs[random.randint(0, 3)]} { random.random()}"         
+            return f"{random.random()} {signs[random.randint(0, 2)]} { random.random()}"         
     elif(type == "string"):    
-        return f'"{randomString(random.randint(20, 100))}"'
+        return f'"{randomString(random.randint(20, 50))}"'
     
 def findMacroOccurences(text, macro_type):
         try:
             # finding #define index
             define_index = text.index(f'{macro_type}')
+            print(define_index)
             
             # finding all occorunes of macros
             indices_object = re.finditer(pattern=macro_type, string=text)
@@ -134,29 +151,25 @@ def parseFile(fileName):
         return
 
     new_string = text
-    length_of_string_added_last = 0
-    for macro in class_macro_locations:    
-        #string_end = macro + len(junk_code_macro)
+    for macro_index in range(len(class_macro_locations)): 
+        if(macro_index != 0):
+            code_macro_locations = findMacroOccurences(new_string, junk_class_macro)
 
         new_string_to_insert = junkClassRequest()
-        new_string_length = len(new_string_to_insert)
         
-        new_string = new_string[:macro+length_of_string_added_last] + new_string_to_insert  + new_string[macro+length_of_string_added_last:]
-        length_of_string_added_last = new_string_length
+        new_string = new_string[:class_macro_locations[macro_index]] + new_string_to_insert  + new_string[class_macro_locations[macro_index]:] 
 
     code_macro_locations = findMacroOccurences(new_string, junk_code_macro)
-    length_of_string_added_last = 0
 
-    for macro in code_macro_locations:    
-        #string_end = macro + len(junk_code_macro)
+    for macro_index in range(len(code_macro_locations)): 
+        if(macro_index != 0):
+            code_macro_locations = findMacroOccurences(new_string, junk_code_macro)
 
         new_string_to_insert = junkCodeRequest()
-        new_string_length = len(new_string_to_insert)
         
-        new_string = new_string[:macro+length_of_string_added_last] + new_string_to_insert  + new_string[macro+length_of_string_added_last:]
-        length_of_string_added_last = new_string_length    
+        new_string = new_string[:code_macro_locations[macro_index]] + new_string_to_insert  + new_string[code_macro_locations[macro_index]:] 
+
     #now replace remove all macro occorunces
-    
     print(f"Inserted code")
     
     new_string = re.sub(f"#define {junk_class_macro}", "", new_string)
@@ -182,4 +195,5 @@ print("Parsing files")
 for file in os.listdir("./"):
     if file.endswith(".cpp"):
         parseFile(file)
+        #print(junkCodeRequest())
 print("File parsing finished")
