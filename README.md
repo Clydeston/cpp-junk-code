@@ -16,4 +16,5 @@ junk code in their place. All new files are created in ./parsed directory. Origi
   <li>Jmps / skips to completley subtly skip the code at runtime</li>
   <li>Command line args / better usability for better integration</li>
   <li>Further optimisations</li>
+  <li>Full build integration</li>
 </ul>
